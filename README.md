@@ -40,6 +40,6 @@ As simple as it may seems, this project takes time to shape as it is right now: 
 -   Checkout dependencies that used in this project, they may also need some help
 -   Spread kindness 💝
 
-[webassembly](https://en.wikipedia.org/wiki/WebAssembly)
-[license](./LICENSE)
+[webassembly]: https://en.wikipedia.org/wiki/WebAssembly
+[license]: ./LICENSE
 [lossy-compression]: https://en.wikipedia.org/wiki/Lossy_compression
