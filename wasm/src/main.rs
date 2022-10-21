@@ -1,36 +1,14 @@
-use flate2::Compression;
+#![no_main]
+
+mod helper;
+
+use helper::{compress_extra, decompress_extra};
 use jpeg_encoder::{ColorType, Encoder};
 use lopdf::{Document, Object};
 
-fn decompress_extra(input: &[u8]) -> Vec<u8> {
-    use flate2::read::ZlibDecoder;
-    use std::io::prelude::*;
-
-    let mut output = Vec::with_capacity(input.len() * 2);
-    let mut decoder = ZlibDecoder::new(input);
-
-    if !input.is_empty() {
-        decoder.read_to_end(&mut output).unwrap_or_else(|err| {
-            println!("{}", err);
-            0
-        });
-    }
-
-    output
-}
-
-fn compress_extra(input: &[u8]) -> Vec<u8> {
-    use flate2::write::ZlibEncoder;
-    use std::io::prelude::*;
-
-    let mut encoder = ZlibEncoder::new(Vec::new(), Compression::best());
-    encoder.write_all(input).unwrap();
-
-    encoder.finish().unwrap()
-}
-
-fn main() -> Result<(), lopdf::Error> {
-    let mut doc = Document::load("example.pdf")?;
+/// image_quality must be in range of 1-100
+pub fn compress_pdf(from: &[u8], image_quality: u8) {
+    let mut doc = Document::load_mem(from).unwrap();
 
     for object in doc.objects.values_mut() {
         if let Object::Stream(ref mut stream) = *object {
@@ -47,10 +25,9 @@ fn main() -> Result<(), lopdf::Error> {
             // JPEG format
             if stream.content.starts_with(&[0xFF, 0xD8, 0xFF]) {
                 let mut buf = Vec::<u8>::new();
-                let encoder = Encoder::new(&mut buf, 10);
+                let encoder = Encoder::new(&mut buf, image_quality);
 
                 if let Ok(image) = image::load_from_memory(&stream.content) {
-                    // TODO: set width and image to 32 bit
                     match encoder.encode(
                         image.as_bytes(),
                         image.width() as u16,
@@ -83,6 +60,6 @@ fn main() -> Result<(), lopdf::Error> {
         }
     }
 
-    doc.save("out.pdf")?;
-    Ok(())
+    // TODO: export to bytes
+    // doc.save()
 }
