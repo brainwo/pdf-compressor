@@ -1,2 +1,4 @@
-*/target
-*/temp
+target
+/temp
+
+*.pdf

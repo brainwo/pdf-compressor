@@ -1,8 +1,8 @@
-#![no_main]
-
 use flate2::{read::ZlibDecoder, write::ZlibEncoder, Compression};
 use jpeg_encoder::{ColorType, Encoder};
 use lopdf::{Document, Object, Stream};
+// TODO: currently support Linux only
+pub use progress_bar::*;
 use std::io::prelude::*;
 
 enum FileType {
@@ -58,8 +58,10 @@ impl StreamExtend for Stream {
 /// Take a PDF binary and output compressed PDF binary
 /// May panic on unexpected behavior
 /// image_quality must be in range of 1-100
-pub fn compress_pdf(from: &[u8], image_quality: u8) {
+pub fn compress_pdf(from: &[u8], image_quality: u8, verbose: bool) -> Document {
     let mut doc = Document::load_mem(from).unwrap();
+    init_progress_bar(doc.objects.len());
+    set_progress_bar_action("Compressing", Color::Blue, Style::Bold);
 
     for object in doc.objects.values_mut() {
         if let Object::Stream(ref mut stream) = *object {
@@ -94,7 +96,9 @@ pub fn compress_pdf(from: &[u8], image_quality: u8) {
                     ) {
                         Ok(_) => stream.set_content(buf),
                         Err(e) => {
-                            println!("Error {e}");
+                            if verbose {
+                                println!("Error {e}");
+                            }
                         }
                     }
 
@@ -102,17 +106,20 @@ pub fn compress_pdf(from: &[u8], image_quality: u8) {
                         stream.compress_ex();
                     }
                 } else {
+                    // Ignore any error and continue to compress other streams.
                     let _ = stream.compress();
                 }
-            }
-
-            if stream.allows_compression {
+            } else if stream.allows_compression {
                 // Ignore any error and continue to compress other streams.
                 let _ = stream.compress();
             }
         }
+
+        inc_progress_bar();
     }
 
+    finalize_progress_bar();
+
     // TODO: export to bytes
-    // doc.save()
+    doc
 }
