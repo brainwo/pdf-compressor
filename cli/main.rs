@@ -1,4 +1,9 @@
-use std::{fs, io, path::PathBuf, str::FromStr};
+use std::{
+    fs,
+    io::{self, ErrorKind},
+    path::PathBuf,
+    str::FromStr,
+};
 
 use clap::Parser;
 use pdf_compressor::*;
@@ -33,7 +38,30 @@ struct Cli {
 fn main() -> Result<(), io::Error> {
     let cli = Cli::parse();
 
-    let binary = fs::read(&cli.path)?;
+    let binary = match fs::read(&cli.path) {
+        Ok(read) => read,
+        Err(e) => {
+            if !cli.silent {
+                init_progress_bar(10);
+                if e.kind() == ErrorKind::NotFound {
+                    print_progress_bar_info(
+                        "Error",
+                        "error on reading PATH: no such file or directory",
+                        Color::Red,
+                        Style::Bold,
+                    );
+                } else {
+                    print_progress_bar_info(
+                        "Error",
+                        "error on reading PATH: read below error trace for details",
+                        Color::Red,
+                        Style::Bold,
+                    );
+                }
+            }
+            return Err(e);
+        }
+    };
     let quality = cli.image_quality.unwrap_or(30);
     let output_path = cli.output.unwrap_or_else(|| {
         PathBuf::from_str(&format!(

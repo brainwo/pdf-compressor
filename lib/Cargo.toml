@@ -8,7 +8,7 @@ flate2 = "1.0.24"
 image = "0.24.4"
 jpeg-encoder = "0.5.1"
 lopdf = "0.27.0"
-progress_bar = "1.0.3"
+progress_bar = { git = "https://github.com/brainwo/cli_progress_bar", branch = "action-mode" }
 
 [lib]
 name = "pdf_compressor"

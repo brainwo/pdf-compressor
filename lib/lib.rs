@@ -2,6 +2,7 @@ use flate2::{read::ZlibDecoder, write::ZlibEncoder, Compression};
 use jpeg_encoder::{ColorType, Encoder};
 use lopdf::{Document, Object, Stream};
 // TODO: currently support Linux only
+use progress_bar::pb::ProgressBar;
 pub use progress_bar::*;
 use std::io::prelude::*;
 
@@ -55,15 +56,17 @@ impl StreamExtend for Stream {
     }
 }
 
+// TODO: make progress_bar not available in bare metal (wasm32-unknown-unknown, etc)
 /// Take a PDF binary and output compressed PDF binary
 /// May panic on unexpected behavior
 /// image_quality must be in range of 1-100
 pub fn compress_pdf(from: &[u8], image_quality: u8, verbose: bool) -> Document {
     let mut doc = Document::load_mem(from).unwrap();
-    init_progress_bar(doc.objects.len());
-    set_progress_bar_action("Compressing", Color::Blue, Style::Bold);
 
-    for object in doc.objects.values_mut() {
+    let mut progress_bar = ProgressBar::new(doc.objects.len());
+    progress_bar.set_action("Compressing", Color::Blue, Style::Bold, Mode::Percentage);
+
+    doc.objects.values_mut().for_each(|object| {
         if let Object::Stream(ref mut stream) = *object {
             // Images may have an extra layer
             let mut is_image_zlib = false;
@@ -106,19 +109,24 @@ pub fn compress_pdf(from: &[u8], image_quality: u8, verbose: bool) -> Document {
                         stream.compress_ex();
                     }
                 } else {
-                    // Ignore any error and continue to compress other streams.
+                    // Ignore any error and continue to compress other streams
                     let _ = stream.compress();
                 }
             } else if stream.allows_compression {
-                // Ignore any error and continue to compress other streams.
+                // Ignore any error and continue to compress other streams
                 let _ = stream.compress();
             }
         }
 
-        inc_progress_bar();
-    }
+        progress_bar.inc();
+    });
 
-    finalize_progress_bar();
+    progress_bar.print_final_info(
+        "Compressed",
+        &format!("{} streams compressed", doc.objects.len()),
+        Color::Green,
+        Style::Bold,
+    );
 
     // TODO: export to bytes
     doc
