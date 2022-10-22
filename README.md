@@ -4,6 +4,8 @@
 
 A private PDF compression site powered by [WebAssembly][webassembly]. Most PDF compression site out there is storing your PDF in their serverin order to compress your PDF file, some claims they encrypt the file stored in their server. Since most of hardware nowadays can easily do PDF compression locally, this tool took another approach: that is levering your device extra power to compress your PDF files locally, which enabled by the WebAssembly technology. Main caveat of using this method is it may not run in low-end devices or with big PDF files, since the compressed PDF file will took the available RAM and will take a while if it's runned in limited CPU. It will still be better to use cloud compression site to compress your PDF if you are running a lower-end devices, but for the most use cases you can use this tool.
 
+In addition to the web format, this tool also available as a CLI program.
+
 This project is released under the [MIT license][license], feel free to use and/or study the source code with attribution to the copyright owner.
 
 ## How the compression work
