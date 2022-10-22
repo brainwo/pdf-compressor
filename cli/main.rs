@@ -9,11 +9,24 @@ use pdf_compressor::*;
 struct Cli {
     #[arg(required = true)]
     path: PathBuf,
-    #[arg(short = 'q', long, num_args= 0..=100)]
+    #[arg(
+        short = 'q',
+        long,
+        help = "Compression quality for JPEG images, the higher the better"
+    )]
     image_quality: Option<u8>,
-    #[arg(short = 'o', long)]
+    #[arg(
+        short = 'o',
+        long,
+        help = "Output default to \"compressed-<FILE_NAME>.pdf\""
+    )]
     output: Option<PathBuf>,
-    #[arg(short = 's', long, default_value_t = false)]
+    #[arg(
+        short = 's',
+        long,
+        default_value_t = false,
+        help = "Terminal will not output anything"
+    )]
     silent: bool,
 }
 
@@ -32,13 +45,16 @@ fn main() -> Result<(), io::Error> {
 
     let mut pdf = compress_pdf(&binary, quality, !cli.silent);
     pdf.save(&output_path)?;
-    init_progress_bar(10);
-    print_progress_bar_info(
-        "Success",
-        &format!("PDF file saved to {:?}", output_path),
-        Color::Green,
-        Style::Bold,
-    );
+
+    if !cli.silent {
+        init_progress_bar(10);
+        print_progress_bar_info(
+            "Success",
+            &format!("PDF file saved to {:?}", output_path),
+            Color::Green,
+            Style::Bold,
+        );
+    }
 
     Ok(())
 }
