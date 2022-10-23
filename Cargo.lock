@@ -780,7 +780,7 @@ dependencies = [
 [[package]]
 name = "progress_bar"
 version = "1.1.0"
-source = "git+https://github.com/brainwo/cli_progress_bar?branch=action-mode#20456c3718b8254018954024f04bd6f31bf1c1b6"
+source = "git+https://github.com/brainwo/cli_progress_bar?branch=action-mode#c542022771f461045ea061bf3fa2582e1d9ed23e"
 dependencies = [
  "lazy_static",
 ]

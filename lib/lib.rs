@@ -1,7 +1,6 @@
 use flate2::{read::ZlibDecoder, write::ZlibEncoder, Compression};
 use jpeg_encoder::{ColorType, Encoder};
 use lopdf::{Document, Object, Stream};
-// TODO: currently support Linux only
 use progress_bar::pb::ProgressBar;
 pub use progress_bar::*;
 use std::io::prelude::*;
@@ -64,7 +63,7 @@ pub fn compress_pdf(from: &[u8], image_quality: u8, verbose: bool) -> Document {
     let mut doc = Document::load_mem(from).unwrap();
 
     let mut progress_bar = ProgressBar::new(doc.objects.len());
-    progress_bar.set_action("Compressing", Color::Blue, Style::Bold, Mode::Percentage);
+    progress_bar.set_action_with_mode("Compressing", Color::Blue, Style::Bold, Mode::Percentage);
 
     doc.objects.values_mut().for_each(|object| {
         if let Object::Stream(ref mut stream) = *object {
