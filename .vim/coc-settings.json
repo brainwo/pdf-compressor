@@ -1,0 +1,5 @@
+{
+    "rust-analyzer.rustfmt.rangeFormatting.enable": true,
+    "rust-analyzer.checkOnSave.command": "clippy",
+    "coc.preferences.formatOnSaveFiletypes": ["rust", "markdown"]
+}

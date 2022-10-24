@@ -7,6 +7,9 @@ edition = "2021"
 clap = { version = "4.0.18", features = ["derive"] }
 pdf-compressor = { path = "../lib" }
 
+[profile.release]
+lto = true
+
 [[bin]]
 name = "cli"
 path = "./main.rs"

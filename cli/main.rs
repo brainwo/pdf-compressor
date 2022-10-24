@@ -71,7 +71,7 @@ fn main() -> Result<(), io::Error> {
         .unwrap()
     });
 
-    let mut pdf = compress_pdf(&binary, quality, !cli.silent);
+    let mut pdf = CompressPdf::document(&binary, quality, !cli.silent);
     pdf.save(&output_path)?;
 
     if !cli.silent {

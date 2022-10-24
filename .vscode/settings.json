@@ -1,0 +1,5 @@
+{
+    "rust-analyzer.rustfmt.enableRangeFormatting": true,
+    "rust-analyzer.checkOnSave.command": "clippy",
+    "editor.formatOnSave": true,
+}

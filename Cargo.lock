@@ -698,6 +698,7 @@ dependencies = [
  "jpeg-encoder",
  "lopdf",
  "progress_bar",
+ "wasm-bindgen",
 ]
 
 [[package]]

@@ -5,6 +5,9 @@ use progress_bar::pb::ProgressBar;
 pub use progress_bar::*;
 use std::io::prelude::*;
 
+#[cfg(target_arch = "wasm32")]
+use wasm_bindgen::prelude;
+
 enum FileType {
     Zlib,
     Jpeg,
@@ -55,78 +58,109 @@ impl StreamExtend for Stream {
     }
 }
 
-// TODO: make progress_bar not available in bare metal (wasm32-unknown-unknown, etc)
+#[derive(Debug)]
+struct ToBinaryError;
+
+/// Trait to convert Document to binary
+trait ToBinary {
+    fn save_to_binary(&mut self) -> Result<Vec<u8>, ToBinaryError>;
+}
+
+impl ToBinary for Document {
+    fn save_to_binary(&mut self) -> Result<Vec<u8>, ToBinaryError> {
+        let mut target = Vec::<u8>::new();
+        self.save_to(&mut target).map_err(|_| ToBinaryError)?;
+        Ok(target)
+    }
+}
+
 /// Take a PDF binary and output compressed PDF binary
 /// May panic on unexpected behavior
 /// image_quality must be in range of 1-100
-pub fn compress_pdf(from: &[u8], image_quality: u8, verbose: bool) -> Document {
-    let mut doc = Document::load_mem(from).unwrap();
+pub struct CompressPdf;
 
-    let mut progress_bar = ProgressBar::new(doc.objects.len());
-    progress_bar.set_action_with_mode("Compressing", Color::Blue, Style::Bold, Mode::Percentage);
+impl CompressPdf {
+    pub fn document(from: &[u8], image_quality: u8, verbose: bool) -> Document {
+        let mut doc = Document::load_mem(from).unwrap();
 
-    doc.objects.values_mut().for_each(|object| {
-        if let Object::Stream(ref mut stream) = *object {
-            // Images may have an extra layer
-            let mut is_image_zlib = false;
+        let mut progress_bar = ProgressBar::new(doc.objects.len());
+        progress_bar.set_action_with_mode(
+            "Compressing",
+            Color::Blue,
+            Style::Bold,
+            Mode::Percentage,
+        );
 
-            stream.decompress();
+        doc.objects.values_mut().for_each(|object| {
+            if let Object::Stream(ref mut stream) = *object {
+                // Images may have an extra layer
+                let mut is_image_zlib = false;
 
-            // This decompress an extra layer of compressed JPEG image
-            if stream.is_filetype(FileType::Zlib) {
-                stream.decompress_ex();
-                is_image_zlib = true;
-            }
+                stream.decompress();
 
-            if stream.is_filetype(FileType::Jpeg) {
-                let mut buf = Vec::<u8>::new();
-                let encoder = Encoder::new(&mut buf, image_quality);
+                // This decompress an extra layer of compressed JPEG image
+                if stream.is_filetype(FileType::Zlib) {
+                    stream.decompress_ex();
+                    is_image_zlib = true;
+                }
 
-                if let Ok(image) = image::load_from_memory(&stream.content) {
-                    match encoder.encode(
-                        image.as_bytes(),
-                        image.width() as u16,
-                        image.height() as u16,
-                        match image.color() {
-                            image::ColorType::L8 => ColorType::Luma,
-                            image::ColorType::La8 => ColorType::Luma,
-                            image::ColorType::Rgb8 => ColorType::Rgb,
-                            image::ColorType::Rgba8 => ColorType::Rgba,
-                            // TODO: handle other color types
-                            _ => panic!("Not supported"),
-                        },
-                    ) {
-                        Ok(_) => stream.set_content(buf),
-                        Err(e) => {
-                            if verbose {
-                                println!("Error {e}");
+                if stream.is_filetype(FileType::Jpeg) {
+                    let mut buf = Vec::<u8>::new();
+                    let encoder = Encoder::new(&mut buf, image_quality);
+
+                    if let Ok(image) = image::load_from_memory(&stream.content) {
+                        match encoder.encode(
+                            image.as_bytes(),
+                            image.width() as u16,
+                            image.height() as u16,
+                            match image.color() {
+                                image::ColorType::L8 => ColorType::Luma,
+                                image::ColorType::La8 => ColorType::Luma,
+                                image::ColorType::Rgb8 => ColorType::Rgb,
+                                image::ColorType::Rgba8 => ColorType::Rgba,
+                                // TODO: handle other color types
+                                _ => panic!("Not supported"),
+                            },
+                        ) {
+                            Ok(_) => stream.set_content(buf),
+                            Err(e) => {
+                                if verbose {
+                                    println!("Error {e}");
+                                }
                             }
                         }
-                    }
 
-                    if is_image_zlib {
-                        stream.compress_ex();
+                        if is_image_zlib {
+                            stream.compress_ex();
+                        }
+                    } else {
+                        // Ignore any error and continue to compress other streams
+                        let _ = stream.compress();
                     }
-                } else {
+                } else if stream.allows_compression {
                     // Ignore any error and continue to compress other streams
                     let _ = stream.compress();
                 }
-            } else if stream.allows_compression {
-                // Ignore any error and continue to compress other streams
-                let _ = stream.compress();
             }
-        }
 
-        progress_bar.inc();
-    });
+            progress_bar.inc();
+        });
 
-    progress_bar.print_final_info(
-        "Compressed",
-        &format!("{} streams compressed", doc.objects.len()),
-        Color::Green,
-        Style::Bold,
-    );
+        progress_bar.print_final_info(
+            "Compressed",
+            &format!("{} streams compressed", doc.objects.len()),
+            Color::Green,
+            Style::Bold,
+        );
 
-    // TODO: export to bytes
-    doc
+        doc
+    }
+
+    /// Save document to binary
+    #[cfg(target_arch = "wasm32")]
+    #[wasm_bindgen]
+    pub fn binary(from: &[u8], image_quality: u8, verbose: bool) -> Vec<u8> {
+        let mut doc = Self::document(from, image_quality, verbose);
+        doc.save_to_binary().unwrap()
+    }
 }

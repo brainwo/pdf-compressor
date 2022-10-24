@@ -1,4 +1,26 @@
-target
-/temp
 
+# Temporary folder use for testing
+/tmp
+
+# Language-specific directories
+target
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Editor directories and files
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Make sure pdf file used for testing doesn't get commited
 *.pdf

@@ -33,6 +33,20 @@ PDF compression that have been tested using this method:
 
 If you encounter any of these limitations in problematic way(s). Kindly raise an issue and/or send a pull request to this repository.
 
+## Developing
+
+### Prerequisites
+
+-   Rust 1.64.0 or later (may work on previous version)
+-   Node.js v16.16.0 or later (may work on previous version)
+-   [`just`](https://github.com/casey/just): command runner
+-   [`mold`](https://github.com/rui314/mold): faster linker to Rust's default
+-   [`wasmpack`](https://rustwasm.github.io/wasm-pack/): tooling for Wasm
+-   Editor tools (editor settings already preconfigured for coc.nvim and VS Code):
+    -   [`rust-analyzer`](https://github.com/rust-lang/rust-analyzer): format code
+    -   [Svelte language server](https://github.com/coc-extensions/coc-svelte)
+    -   [`clippy`](https://github.com/rust-lang/rust-clippy): extra linter for Rust code
+
 ## I like this work, what can I do
 
 As simple as it may seems, this project takes time to shape as it is right now: to provide a useful tool and helpful educational resources as well as the extra efforts put into maintaining the source code and repository. This has been a labor of love for myself. Here something you can do:
