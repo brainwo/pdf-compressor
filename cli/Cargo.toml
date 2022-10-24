@@ -1,5 +1,5 @@
 [package]
-name = "cli"
+name = "pdf-compressor-cli"
 version = "0.1.0"
 edition = "2021"
 
@@ -8,6 +8,6 @@ clap = { version = "4.0.18", features = ["derive"] }
 pdf-compressor = { path = "../lib" }
 
 [[bin]]
-name = "cli"
+name = "pdf-compressor"
 path = "./main.rs"
 
