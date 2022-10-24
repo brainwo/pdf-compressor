@@ -38,9 +38,8 @@ struct Cli {
 fn main() -> Result<(), io::Error> {
     let cli = Cli::parse();
 
-    let binary = match fs::read(&cli.path) {
-        Ok(read) => read,
-        Err(e) => {
+    let binary = fs::read(&cli.path)
+        .map_err(|e| {
             if !cli.silent {
                 init_progress_bar(10);
                 if e.kind() == ErrorKind::NotFound {
@@ -59,9 +58,9 @@ fn main() -> Result<(), io::Error> {
                     );
                 }
             }
-            return Err(e);
-        }
-    };
+        })
+        .unwrap();
+
     let quality = cli.image_quality.unwrap_or(30);
     let output_path = cli.output.unwrap_or_else(|| {
         PathBuf::from_str(&format!(

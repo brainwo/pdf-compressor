@@ -13,9 +13,6 @@ progress_bar = { git = "https://github.com/brainwo/cli_progress_bar", branch = "
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 wasm-bindgen = "0.2.83"
 
-[profile.release]
-lto = true
-
 [lib]
 name = "pdf_compressor"
 path = "./lib.rs"
