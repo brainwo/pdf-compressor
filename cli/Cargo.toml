@@ -5,9 +5,9 @@ edition = "2021"
 
 [dependencies]
 clap = { version = "4.0.18", features = ["derive"] }
-pdf-compressor = { path = "../lib" }
+pdf-compressor-lib = { path = "../lib" }
 
 [[bin]]
-name = "pdf-compressor"
+name = "pdfcompressor"
 path = "./main.rs"
 

@@ -4,5 +4,7 @@ default:
 cli-run:
     cargo run --release
 
+#  web
+
 wasm-build:
-    wasm-bindgen
+    cd lib && wasm-pack build --target nodejs --out-dir=../lib-node

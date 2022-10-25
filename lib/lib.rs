@@ -5,8 +5,12 @@ use progress_bar::pb::ProgressBar;
 pub use progress_bar::*;
 use std::io::prelude::*;
 
+#[cfg(feature = "wee_alloc")]
+#[global_allocator]
+static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;
+
 #[cfg(target_arch = "wasm32")]
-use wasm_bindgen::prelude;
+use wasm_bindgen::prelude::*;
 
 enum FileType {
     Zlib,
@@ -77,10 +81,19 @@ impl ToBinary for Document {
 /// Take a PDF binary and output compressed PDF binary
 /// May panic on unexpected behavior
 /// image_quality must be in range of 1-100
+#[wasm_bindgen]
+#[cfg(target_arch = "wasm32")]
 pub struct CompressPdf;
 
+/// Take a PDF binary and output compressed PDF binary
+/// May panic on unexpected behavior
+/// image_quality must be in range of 1-100
+#[cfg(target_arch = "x86_64")]
+pub struct CompressPdf;
+
+#[wasm_bindgen]
 impl CompressPdf {
-    pub fn document(from: &[u8], image_quality: u8, verbose: bool) -> Document {
+    fn document_internal(from: &[u8], image_quality: u8, verbose: bool) -> Document {
         let mut doc = Document::load_mem(from).unwrap();
 
         let mut progress_bar = ProgressBar::new(doc.objects.len());
@@ -157,10 +170,17 @@ impl CompressPdf {
     }
 
     /// Save document to binary
-    #[cfg(target_arch = "wasm32")]
-    #[wasm_bindgen]
-    pub fn binary(from: &[u8], image_quality: u8, verbose: bool) -> Vec<u8> {
-        let mut doc = Self::document(from, image_quality, verbose);
-        doc.save_to_binary().unwrap()
+    #[cfg(target_arch = "x86_64")]
+    pub fn document(from: &[u8], image_quality: u8, verbose: bool) -> Document {
+        Self::document_internal(from, image_quality, verbose)
+    }
+
+    /// Save document to binary
+    pub fn binary(from: &[u8], image_quality: u8) -> Option<Vec<u8>> {
+        let mut doc = Self::document_internal(from, image_quality, false);
+        match doc.save_to_binary() {
+            Ok(bin) => Some(bin),
+            Err(_) => None,
+        }
     }
 }

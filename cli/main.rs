@@ -6,7 +6,7 @@ use std::{
 };
 
 use clap::Parser;
-use pdf_compressor::*;
+use pdf_compressor_lib::*;
 
 #[derive(Debug, Parser)]
 #[command(name = "pdf-compressor", version)]
