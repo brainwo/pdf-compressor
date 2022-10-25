@@ -1,10 +1,11 @@
 <script lang="ts">
-  let count: number = 0
-  const increment = () => {
-    count += 1
+ // import { CompressPdf }  from "pdf_compressor_lib";
+
+  const openFile = () => {
+//    CompressPdf.binary(undefined, 10, true)
   }
 </script>
 
-<button on:click={increment}>
-  count is {count}
+<button on:click={openFile}>
+  Open File
 </button>
